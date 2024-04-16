@@ -2,13 +2,13 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strconv"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type User struct {
@@ -68,15 +68,26 @@ func createData(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	hasing, _ := bcrypt.GenerateFromPassword([]byte("MAUALNA"), 5)
+
+	decryt := bcrypt.CompareHashAndPassword(hasing, []byte("MAUALNA"))
+	if decryt != nil {
+		message := map[string]interface{}{
+			"message": decryt.Error(),
+			"status":  http.StatusBadRequest,
+		}
+
+		json.NewEncoder(w).Encode(message)
+		return
+	}
+
 	message := map[string]interface{}{
 		"message": user.FullName,
 		"status":  http.StatusCreated,
 		"payload": user,
+		"crypt":   decryt,
 	}
 
-	marshalData, _ := json.Marshal(message)
-	fmt.Println(marshalData)
-
-	json.NewEncoder(w).Encode(string(marshalData))
+	json.NewEncoder(w).Encode(message)
 	return
 }
