@@ -70,7 +70,7 @@ func createData(w http.ResponseWriter, r *http.Request) {
 
 	hasing, _ := bcrypt.GenerateFromPassword([]byte("MAUALNA"), 5)
 
-	decryt := bcrypt.CompareHashAndPassword(hasing, []byte("MAUALNA"))
+	decryt := bcrypt.CompareHashAndPassword(hasing, []byte("MAUAL	NA"))
 	if decryt != nil {
 		message := map[string]interface{}{
 			"message": decryt.Error(),
