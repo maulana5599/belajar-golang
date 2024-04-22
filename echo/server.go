@@ -1,8 +1,10 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"golang-dasar/database"
+	"io"
 	"log"
 	"net/http"
 	"reflect"
@@ -34,6 +36,7 @@ func main() {
 	e.GET("/test", apiTransaction)
 	e.GET("/reflect", detail)
 	e.GET("/channel", channelHandler)
+	e.GET("/request", getHttpRequest)
 	e.Logger.Fatal(e.Start(":3000"))
 }
 
@@ -119,4 +122,46 @@ func messageChannel(nama string, messages chan interface{}) {
 	messages <- echo.Map{
 		"Nama": data,
 	}
+}
+
+type ResponseDummy struct {
+	Limit int           `json:"limit"`
+	Posts []interface{} `json:"posts"`
+	Skip  int           `json:"skip"`
+	Total int           `json:"total"`
+}
+
+func getHttpRequest(ctx echo.Context) error {
+	// var client = &http.Client{}
+	response, err := http.Get("https://dummyjson.com/posts?skip=5&limit=10")
+	if err != nil {
+		fmt.Printf("client: could not create request: %s\n", err)
+		return ctx.JSON(404, err.Error())
+	}
+
+	defer response.Body.Close()
+
+	body, err := io.ReadAll(response.Body)
+	if err != nil {
+		return ctx.JSON(404, err.Error())
+	}
+
+	// var stringData map[string]interface{}
+	var stringData ResponseDummy
+
+	err = json.Unmarshal(body, &stringData)
+
+	if err != nil {
+		return ctx.JSON(404, err.Error())
+	}
+
+	data := stringData.Posts
+	for _, v := range data {
+		fmt.Println(v)
+	}
+
+	return ctx.JSON(200, echo.Map{
+		"Message": "Get message success",
+		"Data":    stringData,
+	})
 }
