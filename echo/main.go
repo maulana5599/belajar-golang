@@ -11,6 +11,7 @@ import (
 	"runtime"
 	"sync"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
@@ -37,6 +38,7 @@ func main() {
 	e.GET("/reflect", detail)
 	e.GET("/channel", channelHandler)
 	e.GET("/request", getHttpRequest)
+	e.GET("/compositioning", compositioningInheritance)
 	e.Logger.Fatal(e.Start(":3000"))
 }
 
@@ -164,4 +166,31 @@ func getHttpRequest(ctx echo.Context) error {
 		"Message": "Get message success",
 		"Data":    stringData,
 	})
+}
+
+type InheritaceStruct struct {
+	Nama string `validate:"required"`
+}
+
+func compositioningInheritance(ctx echo.Context) error {
+	var request = new(InheritaceStruct)
+	if err := ctx.Bind(request); err != nil {
+		return ctx.JSON(400, err.Error())
+	}
+
+	validate := validator.New()
+	errvalidate := validate.Struct(request)
+	if errvalidate != nil {
+		return ctx.JSON(400, errvalidate.Error())
+	}
+
+	var namaBaru = request.childrenComposition()
+	return ctx.JSON(200, echo.Map{
+		"Nama":   namaBaru,
+		"Status": http.StatusOK,
+	})
+}
+
+func (a InheritaceStruct) childrenComposition() string {
+	return fmt.Sprintf("Nama %s", a.Nama)
 }
